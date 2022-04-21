@@ -1,0 +1,9 @@
+rosu albastru mov
+rosu 2
+albastru 5
+mov 7
+stare_initiala
+2 1 albastru
+3 2 rosu
+stare_finala
+2 mov

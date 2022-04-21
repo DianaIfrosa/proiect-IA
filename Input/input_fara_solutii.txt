@@ -1,0 +1,12 @@
+rosu albastru mov
+verde rosu portocaliu
+rosu 2
+verde 4
+albastru 5
+portocaliu 3
+mov 7
+stare_initiala
+5 5 verde
+3 3 rosu
+stare_finala
+3 mov
