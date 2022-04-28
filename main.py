@@ -11,15 +11,15 @@ class Nod: # o stare
         """
         Constructor in care initializez datele membre.
         Args:
-            info : lista cu tupluri de tipul (cantitate_totala, cantitate_curenta, culoare)
-            h: costul de la nodul curent la un nod scop pe un anumit drum
+            info : lista cu vase (tupluri) de tipul (cantitate_totala, cantitate_curenta, culoare)
+            h: costul (estimat) de la nodul curent la un nod scop pe un anumit drum
         """
         self.info = info
         self.h = h
 
     def calculeaza_cost(self, nod):
         """
-         Metoda care calculeaza costul dintre o stare la alta (nodul curent si nodul dat).
+         Metoda care calculeaza costul de la o stare la alta (nodul curent si nodul dat).
          Se gasesc intai cele 2 vase modificate apoi se calculeaza pe cazuri costul final al turnarii.
          Args:
             nod: starea in care trece nodul curent
@@ -62,7 +62,7 @@ class Nod: # o stare
 
         else:
                 if configuratie2[poz_al_doilea_vas_schimbat][2] != 'culoare_nedefinita': # s-a facut o combinatie valida
-                    cost_total = cantitate_turnata * Problema.costuri_culori[configuratie1[poz_primul_vas_schimbat][2]] #todo ?????
+                    cost_total = cantitate_turnata * Problema.costuri_culori[configuratie1[poz_primul_vas_schimbat][2]]
 
                 else: # nu s-a facut o combinatie valida
                     if configuratie1[poz_primul_vas_schimbat][2] == 'culoare_nedefinita':
@@ -78,17 +78,15 @@ class Nod: # o stare
         return cost_total
 
     @classmethod
-    def calculeaza_h(cls, configuratie, euristica):
+    def calculeaza_h(cls, configuratie, euristica = 'banala'):
         """
         Metoda statica care calculeaza h' in functie de configuratia data si un tip de euristica.
         Args:
-            configuratie: starea curenta
+            configuratie: starea curenta = lista cu vase (tupluri) de tipul (cantitate_totala, cantitate_curenta, culoare)
             euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila care determina o formula specifica
         Returns:
             h: valoarea functiei h' calculata
         """
-
-        # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if euristica == 'banala':
             nod = Nod(configuratie, 0)
             if nod.test_stare_finala():
@@ -97,11 +95,55 @@ class Nod: # o stare
                 return 1
 
         elif euristica == 'admisibila1':
-            return 2
+            multime_culori_finale = set()
+            val_euristica = 0
+
+            for (_, culoare) in Problema.stare_finala:
+                multime_culori_finale.add(culoare)
+
+            for (capacit, cant, cul) in configuratie:
+                gasit = False # cauta vasul curent in configuratia finala
+                cul_gasita = False # cauta culoarea curenta printre cele din configuratia finala
+
+                if cul in multime_culori_finale:
+                    for (cant_fin, cul_fin) in Problema.stare_finala:
+                        if cul_fin == cul:
+                            cul_gasita = True
+                            if cant == cant_fin:
+                                gasit = True
+                                break
+
+                # am gasit culoare din configuratia finala dar nu este in cantitatea buna
+                # presupun ca se va muta un litru de lichid din acea culoare, deci adaug costul ei la valoarea euristica
+                if cul_gasita is True and gasit is False:
+                    val_euristica += Problema.costuri_culori[cul]
+                    multime_culori_finale.remove(cul)
+
+            return val_euristica
+
         elif euristica == 'admisibila2':
+        # TODO admisibila2
             return 3
         elif euristica == 'neadmisibila':
-            return 4
+            # pentru fiecare vas care nu se regaseste in configuratia finala se adauga la euristica costul culorii
+            # din vas (daca e culoare valida)
+            # se poate observa pe exemplul cu MEGA SCURT
+            #todo descriere
+            val_euristica = 0
+            for (capacit, cant, cul) in configuratie:
+                gasit = False  # cauta vasul curent in configuratia finala
+                cul_gasita = False  # cauta culoarea curenta printre cele din configuratia finala
+
+                for (cant_fin, cul_fin) in Problema.stare_finala:
+                    if cul_fin == cul:
+                        cul_gasita = True
+                        if cant == cant_fin:
+                            gasit = True
+                            break
+                if (gasit and cul_gasita) is False and cul != 'nicio_culoare' and cul != 'culoare_nedefinita':  # nu e in config finala
+                    val_euristica += Problema.costuri_culori[cul]
+
+            return val_euristica
 
     def test_stare_finala(self):
         """
@@ -153,7 +195,7 @@ class NodParcurgere:
             if vase[i][1] == 0: # primul vas nu trebuie sa fie vas gol
                 continue
             for j in range(len(vase)): # caut un al doilea vas
-                if i != j and vase[j][0] != vase[j][1]: #vase diferite, iar al doilea nu e plin
+                if i != j and vase[j][0] != vase[j][1]: # vase diferite, iar al doilea nu e plin
                     # torn din vasul i in vasul j
                     cantitate_max1 = vase[i][0]
                     cantitate_max2 = vase[j][0]
@@ -166,7 +208,7 @@ class NodParcurgere:
 
                     cantitate_turnata = min(cantitate_max2-cantitate2, cantitate1)
 
-                    #mutare lichid
+                    # mutare lichid
                     cantitate1 = cantitate1 - cantitate_turnata
                     cantitate2 = cantitate2 + cantitate_turnata
 
@@ -200,17 +242,17 @@ class NodParcurgere:
                     succesor = NodParcurgere(succesor_nod, self, g)
 
                     if succesor.stare_cu_potential():
-                        if self.stramos(succesor) == False:  # nodul gasit nu apare deja in drumul format (radacina -> nod curent)
+                        if self.stramos(succesor) is False:  # nodul gasit nu apare deja in drumul format (radacina -> nod curent)
                             lista_succ.append(succesor)
 
         return lista_succ
 
     def stare_cu_potential(self):
         """
-        Functie care verifica daca nodul curent are potential (nu putem garanta ca nu conduce la solutii).
+        Functie care verifica daca nodul curent are potential.
         Returns:
-            True daca starea curenta este una cu potential, deci merita sa fie expandata
-            False, in caz contrar
+            True daca starea curenta este una cu potential (poate conduce la solutii sau nu), deci merita sa fie expandata
+            False, in caz contrar (sigur nu conduce la solutii)
         """
 
         vase = self.nod.info
@@ -250,11 +292,9 @@ class NodParcurgere:
             if c1 in multime_culori_vase and c2 in multime_culori_vase:
                 nr_combinatii = nr_combinatii + 1
 
-        if nr_combinatii == 0 and nr_culori_finale != len(multime_culori_finale): # m-am blocat (nu mai pot face combinatii) si nu am toate culorile finale
+        if (nr_combinatii == 0 or nr_vase_pline == len(vase)) and nr_culori_finale != len(multime_culori_finale):
+        # m-am blocat (nu mai pot face combinatii sau vasele sunt toate pline) si nu am toate culorile finale
                 return False
-
-        if nr_vase_pline == len(vase) and nr_culori_finale == 0:  # m-am blocat (toate vasele sunt pline) si n-am ajuns la nicio culoare finala
-            return False
 
         return True
 
@@ -264,7 +304,8 @@ class NodParcurgere:
           Args:
             nodp: obiect de tip NodParcurgere
           Returns:
-            True daca e stramos, False daca nu e stramos
+            True, daca e stramos
+            False, in caz contrar
         """
         nod_stramos = self.parinte
 
@@ -277,6 +318,11 @@ class NodParcurgere:
         return False
 
     def drum(self):
+        """
+        Functie care calculeaza drumul de la nodul start pana la cel curent.
+        Returns:
+             drum = lista de stari (stare = lista de tupluri) din nodul initial pana in cel curent (final)
+        """
         drum = []
         drum.append(self.nod.info)
         nod_stramos = self.parinte
@@ -288,9 +334,12 @@ class NodParcurgere:
         return drum
 
     def afisare_drum(self, file_descriptor, timp_start, drum):
-        """todo
-        functie care afiseaza drumul de cost minim de la nodul start pana la nodul scop dat ca parametru
-        folosind propietatii parinte si urcarii din stramos in stramos
+        """
+        Functie care afiseaza drumul dat ca parametru dupa formatul cerut.
+        Args:
+            file_descriptor: descriptorul fisierului in care se scrie drumul
+            timp_start: timestamp de la inceputul rularii unui anumit algoritm
+            drum: lista de stari de la nodul start pana cel final
         """
         file_descriptor.write("Informatii solutie:\n")
         file_descriptor.write("Lungime drum: " + str(len(drum) - 1) + "\n")
@@ -313,8 +362,14 @@ class NodParcurgere:
                     file_descriptor.write('\n')
             file_descriptor.write('\n')
 
-    # functie care returneaza pozitia obiectului curent de tip NodParcurgere din lista data (-1 daca nu se regaseste)
     def in_lista(self, lista):
+        """"
+        Functie care cauta obiectul curent de tip NodParcurgere in lista data.
+        Args:
+            lista: lista de obiecte de tip NodParcurgere in care se cauta (de obicei, lista open sau lista closed)
+        Returns:
+            pozitie: pozitia elementului in lista sau -1 daca nu se gaseste
+        """
         pozitie = -1
         for i in range(len(lista)):
             if self.nod.info == lista[i].nod.info:
@@ -330,51 +385,45 @@ class Problema:
     timeout = 0
 
     nsol = 0
-    aux_nsol = 0 # ajuta in simularea transmiterii valorii prin referinta in functii si care retine numarul de solutii gasite pana la acel moment
+    aux_nsol = 0 # retine numarul de solutii gasite pana la acel moment; ajuta in simularea transmiterii valorii prin referinta in functii
 
     costuri_culori= {}
     combinatii_culori = []
     stare_finala = []
 
     nod_start = Nod([], 0)
-    euristica = "banala"
 
     nr_noduri_total = 0
     nr_noduri_in_memorie = 0
 
-    def __init__(self, _cale_fisier_input, _cale_folder_output, _nsol, _timeout, _euristica):
+    def __init__(self, _cale_fisier_input, _cale_folder_output, _nsol, _timeout):
         """
-        Constructor in care salvez argumentele primite in linia de comanda
-        si initializez si datele clasei precum:
-
-        costuri_culori: dictionar in care retin culorile ca fiind chei si valorile ca fiind costurile culorilor
-        combinatii_culori: lista de tupluri de tipul (culoare1, culoare2, culoare3)
-        stare_finala: lista de tupluri de genul (cantitate, culoare)
-        nod_start: configuratia din care se pleaca (h = infinit)
-
+        Constructor in care salvez argumentele primite in linia de comanda si initializez datele clasei precum:
+            costuri_culori: dictionar in care retin culorile ca fiind chei si valorile ca fiind costurile culorilor
+            combinatii_culori: lista de tupluri de tipul (culoare1, culoare2, culoare3)
+            stare_finala: lista de tupluri de genul (cantitate, culoare)
+            nod_start: configuratia din care se pleaca
         Args:
             _cale_fisier_input: calea fisierului de unde se citesc datele
             _cale_folder_output: calea folderului unde se vor afla fisiere cu rezultate pentru fiecare algoritm
             _nsol: numarul de solutii de calculat pentru algoritmii DF, BF, DFI, A*, IDA*
             _timeout: timpul dupa care sa se opreasca un algoritm
-            _euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila
         """
 
         Problema.cale_fisier_input = _cale_fisier_input
         Problema.cale_folder_output = _cale_folder_output
         Problema.nsol = _nsol
         Problema.timeout = _timeout
-        Problema.euristica = _euristica
 
         # citesc datele din fisierul de input si initializez celelalte date statice
         # stare_initiala e lista de tupluri de genul (cantitate_totala, cantitate_curenta, culoare) sau (cantitate_totala, 0)
         Problema.costuri_culori, Problema.combinatii_culori, stare_initiala, Problema.stare_finala = self.citire(cale_fisier_input)
-        Problema.nod_start = Nod(stare_initiala, Nod.calculeaza_h(stare_initiala, _euristica))
+        Problema.nod_start = Nod(stare_initiala, Nod.calculeaza_h(stare_initiala))
 
     @classmethod
     def citire(cls, cale_fisier_input):
         """
-        Metoda care citeste datele din fisierul de input si le valideaza
+        Metoda care citeste datele din fisierul de input si le valideaza.
         Args:
             cale_fisier_input: calea fisierului de unde se citesc datele
         Returns:
@@ -408,7 +457,7 @@ class Problema:
                     while s != "stare_finala":
                         valori = s.split()
                         if len(valori) < 2 or len(valori) > 3:
-                            raise Exception
+                            raise Exception # numar invalid de valori pentru un vas
                         if len(valori) == 2: # cantitate curenta 0
                             stare_initiala.append((int(valori[0]), int(valori[1]), "nicio_culoare"))
                         else:
@@ -444,6 +493,9 @@ class Problema:
                         raise Exception # numar invalid de valori
                     s = file_descriptor.readline()
 
+            if len(stare_finala) > len(stare_initiala):
+                raise Exception  # am prea putine vase disponibile
+
         except Exception:
             print("Fisierul de input este invalid!")
             sys.exit(0)
@@ -453,27 +505,56 @@ class Problema:
 
     def ruleaza_algoritmi(self):
         """
-        Metoda care ruleaza pe rand algoritmii BF, DF, DFI, A*, A* optimizat, IDA*.
+        Metoda care ruleaza pe rand algoritmii BF, DF, DFI, A* optimizat, A*, IDA*.
         """
         # cautare neinformata
-        Problema.bfs(Problema.euristica)
-        Problema.rezolva_dfs(Problema.euristica)
-        Problema.rezolva_dfi(Problema.euristica)
+        Problema.bfs()
+        Problema.rezolva_dfs()
+        Problema.rezolva_dfi()
 
         # cautare informata
-        Problema.a_star_optimizat(Problema.euristica)
-        Problema.a_star(Problema.euristica)
-        Problema.rezolva_ida_star(Problema.euristica)
+        # A* optimizat
+        Problema.a_star_optimizat('banala')
+        Problema.a_star_optimizat('admisibila1')
+        Problema.a_star_optimizat('admisibila2')
+        Problema.a_star_optimizat('neadmisibila')
+
+        # A* neoptimizat
+        Problema.a_star('banala')
+        Problema.a_star('admisibila1')
+        Problema.a_star('admisibila2')
+        Problema.a_star('neadmisibila')
+
+        # IDA*
+        Problema.rezolva_ida_star('banala')
+        Problema.rezolva_ida_star('admisibila1')
+        Problema.rezolva_ida_star('admisibila2')
+        Problema.rezolva_ida_star('neadmisibila')
 
     @classmethod
-    def testeaza_timeout(cls, timp):
+    def testeaza_timeout(cls, timp_start):
+        """
+        Functie care testeaza daca a trecut timpul alocat unui algoritm.
+        Args:
+            timp_start: cand a inceput rularea algoritmului
+        Returns:
+            True, daca mai este timp din cel alocat
+            False, daca timpul alocat a expirat
+        """
         timp_acum = time.time() # secunde
-        if (timp_acum - timp) > Problema.timeout:
+        if (timp_acum - timp_start) > Problema.timeout:
             return False
         return True
 
     @classmethod
     def afiseaza_mesaj(cls, configuratie1, configuratie2, file_descriptor):
+        """
+        Functie care afiseaza mesajul corespunzator fiecarei turnari dintr-un vas in altul.
+        Args:
+            configuratie1: starea din care se pleaca
+            configuratie2: starea in care se ajunge
+            file_descriptor: fisierul unde sa se scrie mesajul
+        """
         # gaseste cele 2 vase care au fost modificate (s-a turnat din unul in altul)
         poz_primul_vas_schimbat = -1
         poz_al_doilea_vas_schimbat = -1
@@ -510,12 +591,16 @@ class Problema:
         Problema.nr_noduri_in_memorie = 1
         Problema.nr_noduri_total = 1
 
-        nod_start = NodParcurgere(Problema.nod_start, None, 0)
-        lista_open.append(nod_start)
+        # daca nu exista folderul de output, il creez
+        if not os.path.exists(Problema.cale_folder_output + '\AStarOptimizat'):
+            os.mkdir(Problema.cale_folder_output + '\AStarOptimizat')
 
-        cale_fisier_output_completa = Problema.cale_folder_output + '\AStarOptimizat.txt'
+        cale_fisier_output_completa = Problema.cale_folder_output + '\AStarOptimizat' + '\\' + euristica + '.txt'
 
         file_descriptor = open(cale_fisier_output_completa, 'w')
+
+        nod_start = NodParcurgere(Problema.nod_start, None, 0)
+        lista_open.append(nod_start)
 
         if not nod_start.stare_cu_potential():
             file_descriptor.write("Nu exista solutii!")
@@ -528,7 +613,7 @@ class Problema:
             return
 
         while lista_open:  # cat timp nu e vida
-            Problema.nr_noduri_in_memorie = max(Problema.nr_noduri_in_memorie, len(lista_open)) #todo se pune si closed???
+            Problema.nr_noduri_in_memorie = max(Problema.nr_noduri_in_memorie, len(lista_open) + len(lista_closed))
 
             nod_curent = lista_open.pop(0)
             lista_closed.append(nod_curent)
@@ -536,7 +621,7 @@ class Problema:
                 file_descriptor.write("Solutia a depasit timpul alocat!\n")
                 file_descriptor.close()
                 return
-            if nod_curent.nod.test_stare_finala() == True:
+            if nod_curent.nod.test_stare_finala() is True:
                 drum = nod_curent.drum()
                 Problema.aux_nsol = Problema.aux_nsol - 1
                 nod_curent.afisare_drum(file_descriptor, timp_start, drum)
@@ -548,7 +633,6 @@ class Problema:
             # nod_curent e parinte pentru succ
             for succ in succesori:
                 nod_nou = None
-
                 poz_in_open = succ.in_lista(lista_open)
                 poz_in_closed = succ.in_lista(lista_closed)
 
@@ -592,11 +676,10 @@ class Problema:
         file_descriptor.close()
 
     @classmethod
-    def rezolva_dfs(cls, euristica):
+    def rezolva_dfs(cls):
         """
-        Functie care apeleaza algoritmul DFS si pregateste elementele necesare lui (stiva, nr sol, cale fisier output)
-        Args:
-            euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila
+        Functie care apeleaza algoritmul DFS si pregateste elementele necesare lui (stiva, nr sol,
+        cale fisier output, timp start)
         """
         timp_start = time.time()
         stiva = queue.LifoQueue()
@@ -620,7 +703,7 @@ class Problema:
             return
 
         stiva.put(nod_start)
-        Problema.dfs(stiva, file_descriptor, euristica, timp_start)
+        Problema.dfs(stiva, file_descriptor, timp_start)
 
         if not Problema.testeaza_timeout(timp_start):
             file_descriptor.write("Solutia a depasit timpul alocat!\n")
@@ -636,13 +719,13 @@ class Problema:
         file_descriptor.close()
 
     @classmethod
-    def dfs(cls, stiva, file_descriptor, euristica, timp_start):
+    def dfs(cls, stiva, file_descriptor, timp_start):
         """
-        Algoritmul efectiv de DFS.
+        Algoritmul efectiv de DF.
         Args:
             stiva: stiva in care retin nodurile parcurse pana atunci; o folosesc pentru a afisa mai multe solutii
             file_descriptor: file descriptor pentru fisierul de output unde afisez drumurile
-            euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila
+            timp_start: timestamp de cand a inceput algoritmul
         """
         if not Problema.testeaza_timeout(timp_start):
             return
@@ -652,7 +735,7 @@ class Problema:
 
         # simulez un peek
         nod_curent = stiva.get()
-        stiva.put(nod_curent) # il pun inapoi
+        stiva.put(nod_curent)
 
         Problema.nr_noduri_in_memorie = max(Problema.nr_noduri_in_memorie, stiva.qsize())
 
@@ -663,20 +746,18 @@ class Problema:
             nod_curent.afisare_drum(file_descriptor, timp_start,drum)
             return
 
-        succesori = nod_curent.expandeaza(euristica)
+        succesori = nod_curent.expandeaza()
         Problema.nr_noduri_total += len(succesori)
 
         for succ in succesori:
                 stiva.put(succ)
-                Problema.dfs(stiva, file_descriptor, euristica, timp_start)
+                Problema.dfs(stiva, file_descriptor, timp_start)
         stiva.get()
 
     @classmethod
-    def bfs(cls, euristica):
+    def bfs(cls):
         """
-        Algoritmul efectiv de BFS.
-        Args:
-            euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila
+        Algoritmul efectiv de BF.
         """
         timp_start = time.time()
         coada = queue.Queue()
@@ -722,7 +803,7 @@ class Problema:
                 nod_curent.afisare_drum(file_descriptor, timp_start, drum)
                 continue
 
-            succesori = nod_curent.expandeaza(euristica)
+            succesori = nod_curent.expandeaza()
             Problema.nr_noduri_total += len(succesori)
 
             for succ in succesori:
@@ -738,7 +819,11 @@ class Problema:
         file_descriptor.close()
 
     @classmethod
-    def rezolva_dfi(cls, euristica):
+    def rezolva_dfi(cls):
+        """
+        Functie care apeleaza algoritmul DFI si pregateste elementele necesare lui (lista de drumuri vizitate, nr sol,
+        cale fisier output, timp start, adancime cautare)
+        """
         adancime = 1
         final_graf = False
         timp_start = time.time()
@@ -746,11 +831,10 @@ class Problema:
         nod_start = NodParcurgere(Problema.nod_start, None, 0)
 
         Problema.aux_nsol = Problema.nsol
-        Problema.nr_noduri_in_memorie = 1 #todo de gandit asta (trb parametru la functie => return??)
         Problema.nr_noduri_total = 1
 
         cale_fisier_output_completa = Problema.cale_folder_output + '\DFI.txt'
-        file_descriptor = open(cale_fisier_output_completa, 'w')
+        file_descriptor = open(cale_fisier_output_completa, 'w' )
 
         if not nod_start.stare_cu_potential():
             file_descriptor.write("Nu exista solutii!")
@@ -762,7 +846,7 @@ class Problema:
             file_descriptor.close()
             return
 
-        while final_graf == False:
+        while final_graf is False:
             if Problema.aux_nsol == 0:
                 break
 
@@ -771,7 +855,8 @@ class Problema:
                 file_descriptor.close()
                 return
 
-            drumuri_vizitate, final_graf = Problema.dfi(nod_start, euristica, timp_start, 0, adancime, drumuri_vizitate, file_descriptor)
+            Problema.nr_noduri_in_memorie = 1  # resetez numarul de noduri curente la fiecare cautare noua
+            drumuri_vizitate, final_graf = Problema.dfi(nod_start, timp_start, 0, adancime, drumuri_vizitate, file_descriptor)
             adancime = adancime + 1
 
         if Problema.nsol == Problema.aux_nsol:
@@ -783,7 +868,22 @@ class Problema:
         file_descriptor.close()
 
     @classmethod
-    def dfi(cls, nod_curent, euristica, timp_start, adancime_curenta, adancime_maxima, drumuri_vizitate, file_descriptor):
+    def dfi(cls, nod_curent, timp_start, adancime_curenta, adancime_maxima, drumuri_vizitate, file_descriptor):
+        """
+        Algoritmul efectiv de DFI.
+        Args:
+            nod_curent: nodul curent din cautare
+            timp_start: timestamp de cand a inceput algoritmul
+            adancime_curenta: la ce adancime in graf ma aflu
+            adancime_maxima: adancime maxima din graf pentru cautarea curenta
+            drumuri_vizitate: lista cu solutiile gasite pana acum
+            file_descriptor: file descriptor pentru fisierul de output unde afisez drumurile
+        Returns:
+            drumuri_vizitate: lista cu solutiile gasite pana acum
+            variabila booleana: indica daca am ajuns la finalul cautarii sau nu (a trecut timpul alocat,
+            am ajuns la adancimea maxima, am gasit solutie finala)
+        """
+
         if not Problema.testeaza_timeout(timp_start):
             return drumuri_vizitate, True
 
@@ -796,8 +896,9 @@ class Problema:
                 drumuri_vizitate.append(drum)
             return drumuri_vizitate, True
 
-        succesori = nod_curent.expandeaza(euristica)
+        succesori = nod_curent.expandeaza()
         Problema.nr_noduri_total += len(succesori)
+        Problema.nr_noduri_in_memorie += 1
 
         if adancime_curenta == adancime_maxima:
             if len(succesori) > 0: # nu am ajuns la finalul grafului
@@ -807,7 +908,7 @@ class Problema:
 
         final_graf = True # merg recursiv in fii
         for succ in succesori:
-            drumuri_vizitate, final_graf_recursiv = Problema.dfi(succ, euristica, timp_start, adancime_curenta+1, adancime_maxima, drumuri_vizitate, file_descriptor)
+            drumuri_vizitate, final_graf_recursiv = Problema.dfi(succ, timp_start, adancime_curenta+1, adancime_maxima, drumuri_vizitate, file_descriptor)
 
             if Problema.aux_nsol == 0:
                 return drumuri_vizitate, True
@@ -819,7 +920,7 @@ class Problema:
     @classmethod
     def a_star(cls, euristica):
         """
-        Algoritmul de A* (care da toate drumurile)
+        Algoritmul de A* (care da toate drumurile).
         Args:
             euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila
         """
@@ -832,7 +933,11 @@ class Problema:
         Problema.nr_noduri_in_memorie = 1
         Problema.nr_noduri_total = 1
 
-        cale_fisier_output_completa = Problema.cale_folder_output + '\AStar.txt'
+        # daca nu exista folderul de output, il creez
+        if not os.path.exists(Problema.cale_folder_output + '\AStar'):
+            os.mkdir(Problema.cale_folder_output + '\AStar')
+
+        cale_fisier_output_completa = Problema.cale_folder_output + '\AStar' + '\\' + euristica + '.txt'
         file_descriptor = open(cale_fisier_output_completa, 'w')
 
         coada_prioritati.append(nod_start)
@@ -862,6 +967,7 @@ class Problema:
                 solutie_gasita = True
                 if Problema.aux_nsol == 0:
                     break
+                continue
 
             succesori = nod_curent.expandeaza(euristica)
             Problema.nr_noduri_total += len(succesori)
@@ -872,22 +978,30 @@ class Problema:
                 # sortez lista open crescator dupa f si apoi descrescator dupa g
                 coada_prioritati.sort(key=lambda x: (x.f, -x.g))
 
-        if solutie_gasita == False:
+        if solutie_gasita is False:
             file_descriptor.write("Nu exista solutie!")
         file_descriptor.close()
 
     @classmethod
     def rezolva_ida_star(cls, euristica):
+        """
+        Functie care apeleaza algoritmul IDA* si pregateste elementele necesare lui (timp start, nr sol,
+        file descriptor, lista drumuri gasite)
+        Args:
+            euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila
+        """
         timp_start = time.time()
-        solutie_gasita = False
 
         Problema.aux_nsol = Problema.nsol
-        Problema.nr_noduri_in_memorie = 1 #todo de gandit asta, ca la dfi??
         Problema.nr_noduri_total = 1
 
         nod_start = NodParcurgere(Problema.nod_start, None, 0)
 
-        cale_fisier_output_completa = Problema.cale_folder_output + '\IDAStar.txt'
+        # daca nu exista folderul de output, il creez
+        if not os.path.exists(Problema.cale_folder_output + '\IDAStar'):
+            os.mkdir(Problema.cale_folder_output + '\IDAStar')
+
+        cale_fisier_output_completa = Problema.cale_folder_output + '\IDAStar' + '\\' + euristica + '.txt'
         file_descriptor = open(cale_fisier_output_completa, 'w')
 
         if not nod_start.stare_cu_potential():
@@ -900,9 +1014,11 @@ class Problema:
             file_descriptor.close()
             return
 
+        drumuri_vizitate = []
         limita = nod_start.f # pentru a nu explora noduri cu valori ale lui f foarte mari
         while True:
-            rezultat = Problema.ida_star(nod_start, limita, euristica, file_descriptor, timp_start)
+            Problema.nr_noduri_in_memorie = 1  # resetez numarul de noduri curente la fiecare cautare
+            rezultat = Problema.ida_star(nod_start, limita, euristica, file_descriptor, timp_start, drumuri_vizitate)
             if rezultat == -1:
                 break
             if rezultat == float('inf'):
@@ -913,47 +1029,57 @@ class Problema:
                 break
             limita = rezultat
 
-        if Problema.nsol == Problema.aux_nsol:
-            file_descriptor.write("Nu exista solutie!")
-
         file_descriptor.close()
 
     @classmethod
-    def ida_star(cls, nod_curent, limita, euristica, file_descriptor, timp_start):
+    def ida_star(cls, nod_curent, limita, euristica, file_descriptor, timp_start, drumuri_vizitate):
+        """
+        Algoritmul efectiv de IDA*.
+        Args:
+            nod_curent: nodul curent din cautare
+            limita: pana la ce valoare a functiei f' merg in cautarea curenta
+            euristica: tipul euristicii = banala, admisibila1, admisibila2, neadmisibila
+            file_descriptor: file descriptor pentru fisierul de output unde afisez drumurile
+            timp_start: timestamp de cand a inceput algoritmul
+            drumuri_vizitate: lista cu solutiile gasite pana acum
+        Returns:
+            valoarea minima a functiei f' din nodul curent; -1 daca trebuie sa opresc cautarea (timp alocat depasit,
+            am gasit toate solutiile cerute)
+        """
         if nod_curent.f > limita:
             return nod_curent.f
-
-        if nod_curent.nod.test_stare_finala():
-            drum = nod_curent.drum()
-            Problema.aux_nsol = Problema.aux_nsol - 1
-            file_descriptor.write('-' * 50 + "Solutia nr. " + str(Problema.nsol - Problema.aux_nsol) + '-' * 50 + '\n')
-            nod_curent.afisare_drum(file_descriptor, timp_start, drum)
-            solutie_gasita = True
-            if Problema.aux_nsol == 0:
-                return -1
 
         if not Problema.testeaza_timeout(timp_start):
             file_descriptor.write("Solutia a depasit timpul alocat!\n")
             return -1
 
+        if nod_curent.nod.test_stare_finala():
+            drum = nod_curent.drum()
+            if drum not in drumuri_vizitate:
+                Problema.aux_nsol = Problema.aux_nsol - 1
+                drumuri_vizitate.append(drum)
+                file_descriptor.write('-' * 50 + "Solutia nr. " + str(Problema.nsol - Problema.aux_nsol) + '-' * 50 + '\n')
+                nod_curent.afisare_drum(file_descriptor, timp_start, drum)
+                if Problema.aux_nsol == 0:
+                    return -1
+            return nod_curent.f
+
         succesori = nod_curent.expandeaza(euristica)
         Problema.nr_noduri_total += len(succesori)
+        Problema.nr_noduri_in_memorie += 1
         f_minim = float('inf')
 
         for succ in succesori:
-            rezultat = Problema.ida_star(succ, limita, euristica, file_descriptor, timp_start)
+            rezultat = Problema.ida_star(succ, limita, euristica, file_descriptor, timp_start, drumuri_vizitate)
 
             if rezultat == -1:
                 return -1
 
-            if rezultat < f_minim:
-                f_minim = rezultat
+            f_minim = min(f_minim, rezultat)
 
         return f_minim
 
 if __name__ == "__main__":
-
-    #todo de sters sys.setrecursionlimit(400)
 
     # parsare argumente
     parser = argparse.ArgumentParser()
@@ -983,5 +1109,5 @@ if __name__ == "__main__":
         # daca nu exista folderul de output, il creez
         if not os.path.exists(cale_folder_output):
             os.mkdir(cale_folder_output)
-        problema = Problema(cale_fisier_input, cale_folder_output, nsol, timeout, "banala")
+        problema = Problema(cale_fisier_input, cale_folder_output, nsol, timeout)
         problema.ruleaza_algoritmi()

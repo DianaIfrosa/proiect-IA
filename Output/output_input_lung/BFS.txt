@@ -2,7 +2,7 @@
 Informatii solutie:
 Lungime drum: 4
 Costul drumului: 16
-Timp gasire solutie: 1615ms
+Timp gasire solutie: 1384ms
 Numarul maxim de noduri existente la un moment dat in memorie: 4579
 Numarul total de noduri generate: 12523
 
@@ -44,98 +44,4 @@ Din vasul 0 s-au turnat 1 litri de culoare rosu in vasul 3
 3: 7 3 mov
 4: 1 1 galben
 5: 4 3 rosu
-
---------------------------------------------------Solutia nr. 2--------------------------------------------------
-Informatii solutie:
-Lungime drum: 4
-Costul drumului: 24
-Timp gasire solutie: 1628ms
-Numarul maxim de noduri existente la un moment dat in memorie: 4595
-Numarul total de noduri generate: 12559
-
-0: 5 4 rosu
-1: 2 2 galben
-2: 3 0
-3: 7 3 albastru
-4: 1 0
-5: 4 3 rosu
-
-Din vasul 0 s-au turnat 3 litri de culoare rosu in vasul 2
-0: 5 1 rosu
-1: 2 2 galben
-2: 3 3 rosu
-3: 7 3 albastru
-4: 1 0
-5: 4 3 rosu
-
-Din vasul 1 s-au turnat 1 litri de culoare galben in vasul 4
-0: 5 1 rosu
-1: 2 1 galben
-2: 3 3 rosu
-3: 7 3 albastru
-4: 1 1 galben
-5: 4 3 rosu
-
-Din vasul 3 s-au turnat 1 litri de culoare albastru in vasul 1
-0: 5 1 rosu
-1: 2 2 verde
-2: 3 3 rosu
-3: 7 2 albastru
-4: 1 1 galben
-5: 4 3 rosu
-
-Din vasul 3 s-au turnat 2 litri de culoare albastru in vasul 0
-0: 5 3 mov
-1: 2 2 verde
-2: 3 3 rosu
-3: 7 0
-4: 1 1 galben
-5: 4 3 rosu
-
---------------------------------------------------Solutia nr. 3--------------------------------------------------
-Informatii solutie:
-Lungime drum: 4
-Costul drumului: 22
-Timp gasire solutie: 1789ms
-Numarul maxim de noduri existente la un moment dat in memorie: 4723
-Numarul total de noduri generate: 13021
-
-0: 5 4 rosu
-1: 2 2 galben
-2: 3 0
-3: 7 3 albastru
-4: 1 0
-5: 4 3 rosu
-
-Din vasul 0 s-au turnat 3 litri de culoare rosu in vasul 2
-0: 5 1 rosu
-1: 2 2 galben
-2: 3 3 rosu
-3: 7 3 albastru
-4: 1 0
-5: 4 3 rosu
-
-Din vasul 1 s-au turnat 1 litri de culoare galben in vasul 5
-0: 5 1 rosu
-1: 2 1 galben
-2: 3 3 rosu
-3: 7 3 albastru
-4: 1 0
-5: 4 4 culoare_nedefinita
-
-Din vasul 3 s-au turnat 1 litri de culoare albastru in vasul 1
-0: 5 1 rosu
-1: 2 2 verde
-2: 3 3 rosu
-3: 7 2 albastru
-4: 1 0
-5: 4 4 culoare_nedefinita
-
-Din vasul 0 s-au turnat 1 litri de culoare rosu in vasul 3
-0: 5 0
-1: 2 2 verde
-2: 3 3 rosu
-3: 7 3 mov
-4: 1 0
-5: 4 4 culoare_nedefinita
 

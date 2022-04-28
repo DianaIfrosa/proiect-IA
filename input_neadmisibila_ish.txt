@@ -1,9 +1,10 @@
 rosu albastru mov
-rosu 2
+rosu 5
 albastru 5
-mov 7
+mov 1
 stare_initiala
-2 1 albastru
-3 2 rosu
+4 4 mov
+3 0
+2 0
 stare_finala
-2 mov
+3 mov

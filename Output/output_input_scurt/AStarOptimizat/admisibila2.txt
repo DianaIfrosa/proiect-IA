@@ -1,9 +1,8 @@
---------------------------------------------------Solutia nr. 1--------------------------------------------------
 Informatii solutie:
 Lungime drum: 1
 Costul drumului: 4
 Timp gasire solutie: 0ms
-Numarul maxim de noduri existente la un moment dat in memorie: 2
+Numarul maxim de noduri existente la un moment dat in memorie: 4
 Numarul total de noduri generate: 4
 
 0: 2 1 albastru

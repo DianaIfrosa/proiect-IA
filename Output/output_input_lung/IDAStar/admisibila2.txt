@@ -1,9 +1,10 @@
+--------------------------------------------------Solutia nr. 1--------------------------------------------------
 Informatii solutie:
 Lungime drum: 5
 Costul drumului: 14
-Timp gasire solutie: 523ms
-Numarul maxim de noduri existente la un moment dat in memorie: 1206
-Numarul total de noduri generate: 2740
+Timp gasire solutie: 3212ms
+Numarul maxim de noduri existente la un moment dat in memorie: 1215
+Numarul total de noduri generate: 97788
 
 0: 5 4 rosu
 1: 2 2 galben
