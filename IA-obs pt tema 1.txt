@@ -1,6 +1,0 @@
-admisibila: euristica (h') subaprox costul real (h) adica h'<=h
-inadm: am o config pe care h'>h
-
-X si O euristica:
-1. contorizam pe cate din cele 8 directii mai are sanse de castig
-2. pe fiec din cele 8 dir atribuim ponderi pt cate mutari mai are pana sa castige (mai putine mutari => sanse mai mari)
