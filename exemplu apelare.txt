@@ -1,1 +1,1 @@
-python main.py -in D:\facultate\IA\proiectIA\Input -out D:\facultate\IA\proiectIA\Output -nrsol 10 -time 10
+python main.py -in D:\facultate\IA\proiectIA\Input -out D:\facultate\IA\proiectIA\Output -nrsol 2 -time 10

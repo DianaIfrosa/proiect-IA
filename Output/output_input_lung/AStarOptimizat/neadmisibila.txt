@@ -1,7 +1,7 @@
 Informatii solutie:
 Lungime drum: 4
 Costul drumului: 18
-Timp gasire solutie: 784ms
+Timp gasire solutie: 1096ms
 Numarul maxim de noduri existente la un moment dat in memorie: 1695
 Numarul total de noduri generate: 3194
 

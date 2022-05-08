@@ -95,17 +95,17 @@ class Nod: # o stare
                 return 1
 
         elif euristica == 'admisibila1':
-            multime_culori_finale = set()
+            culori_finale = set()
             val_euristica = 0
 
             for (_, culoare) in Problema.stare_finala:
-                multime_culori_finale.add(culoare)
+                culori_finale.add(culoare)
 
             for (capacit, cant, cul) in configuratie:
                 gasit = False # cauta vasul curent in configuratia finala
                 cul_gasita = False # cauta culoarea curenta printre cele din configuratia finala
 
-                if cul in multime_culori_finale:
+                if cul in culori_finale:
                     for (cant_fin, cul_fin) in Problema.stare_finala:
                         if cul_fin == cul:
                             cul_gasita = True
@@ -117,18 +117,40 @@ class Nod: # o stare
                 # presupun ca se va muta un litru de lichid din acea culoare, deci adaug costul ei la valoarea euristica
                 if cul_gasita is True and gasit is False:
                     val_euristica += Problema.costuri_culori[cul]
-                    multime_culori_finale.remove(cul)
+                    culori_finale.remove(cul)
 
             return val_euristica
 
         elif euristica == 'admisibila2':
-        # TODO admisibila2
-            return 3
+            culori_finale = set()
+            culori_curente = set()
+            val_euristica = 0
+
+            for (_, cul_fin) in Problema.stare_finala:
+                culori_finale.add(cul_fin)
+            for (_, _, cul) in configuratie:
+                if cul != 'nicio_culoare' and cul != 'culoare_nedefinita':
+                    culori_curente.add(cul)
+
+            # iau toate culorile care sunt in starea finala, dar nu si in cea curenta
+            dif = culori_finale.difference(culori_curente)
+
+            for cul in dif:
+                cost_minim = 0
+                for (cul1, cul2, cul3) in Problema.combinatii_culori:
+                    # adaug la valoarea euristica costul minim pentru a obtine acea culoare
+                    # parcurgand toate combinatiile din care rezulta culoarea dorita si aleg minimul
+                    # dintre cele 2 culori care se combina
+                    if cul3 == cul:
+                        cost_minim = min(cost_minim, min(Problema.costuri_culori[cul1], Problema.costuri_culori[cul2]))
+                val_euristica += cost_minim
+
+            return val_euristica
+
         elif euristica == 'neadmisibila':
             # pentru fiecare vas care nu se regaseste in configuratia finala se adauga la euristica costul culorii
             # din vas (daca e culoare valida)
-            # se poate observa pe exemplul cu MEGA SCURT
-            #todo descriere
+            # se poate observa pe exemplul scurt
             val_euristica = 0
             for (capacit, cant, cul) in configuratie:
                 gasit = False  # cauta vasul curent in configuratia finala
